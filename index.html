@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Hub - Search Only</title>
+    <title>Movie Hub - GitHub Pages Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -14,7 +14,7 @@
             <h1 class="text-2xl font-bold text-cyan-400 flex items-center gap-2">
                 <i class="fas fa-film"></i> Movie Hub
             </h1>
-            <p class="text-xs text-gray-400">Sinhalasub Database Search</p>
+            <p class="text-xs text-gray-400">GitHub Pages Edition</p>
         </div>
     </header>
 
@@ -53,8 +53,11 @@
     </main>
 
     <script>
-        // ⚠️ ඔයාගේ Dashboard එකෙන් ගත්ත ඇත්තම API Key එක මෙතනට දාන්න
+        // ඔයාගේ Dashboard එකෙන් ගත්ත API Key එක
         const API_KEY = '90346ff775ff3ee92fe8a1118fc57b4d'; 
+        
+        // GitHub Pages වලදී බ්ලොක් වීම් නැති කිරීමට ක්‍රියා කරන පොදු Proxy එකක්
+        const PROXY_URL = 'https://api.allorigins.win/raw?url=';
         const BASE_URL = 'https://apis.sadas.dev/api/v1/movie/sinhalasub/search';
 
         document.getElementById('searchForm').addEventListener('submit', function(e) {
@@ -67,18 +70,17 @@
             const statusMessage = document.getElementById('statusMessage');
             const statusText = document.getElementById('statusText');
 
-            // UI එක Reset කිරීම
             resultsContainer.innerHTML = '';
             statusText.innerText = "ඩේටාබේස් එකෙන් සොයමින් පවතී...";
             statusMessage.classList.remove('hidden');
 
-            // API එකට කෙලින්ම Request එක යැවීම (CORS බ්ලොක් වීම් මඟහැරීමට mode: 'cors' යොදා ඇත)
-            fetch(`${BASE_URL}?q=${encodeURIComponent(query)}`, {
+            // API Request එක Proxy එක හරහා සකස් කිරීම
+            const finalUrl = `${PROXY_URL}${encodeURIComponent(`${BASE_URL}?q=${query}`)}`;
+
+            fetch(finalUrl, {
                 method: 'GET',
-                mode: 'cors', 
                 headers: { 
-                    'x-api-key': API_KEY, 
-                    'Accept': 'application/json'
+                    'x-api-key': API_KEY
                 }
             })
             .then(response => {
@@ -88,11 +90,10 @@
             .then(data => {
                 statusMessage.classList.add('hidden');
                 
-                // API එකෙන් ලැබෙන දත්ත ලැයිස්තුවක් (Array) නම් එය Loop කර පෙන්වීම
                 if (data && data.length > 0) {
                     data.forEach(movie => {
                         const movieTitle = movie.title || 'Untitled Movie';
-                        const movieUrl = movie.link || '#'; // මුල් සයිට් එකේ ලින්ක් එක
+                        const movieUrl = movie.link || '#'; 
                         const movieImg = movie.img || movie.image || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?q=80&w=300';
 
                         const card = document.createElement('div');
@@ -102,7 +103,7 @@
                             <img src="${movieImg}" alt="${movieTitle}" class="w-24 h-36 object-cover rounded-xl bg-gray-850 flex-shrink-0 shadow-md">
                             <div class="flex flex-col justify-between flex-1 py-1">
                                 <div>
-                                    <h3 class="font-bold text-base text-gray-100 line-clamp-2 mb-1" title="${movieTitle}">${movieTitle}</h3>
+                                    <h3 class="font-bold text-base text-gray-100 line-clamp-2 mb-1">${movieTitle}</h3>
                                     <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-md font-medium">
                                         <i class="fas fa-closed-captioning mr-1"></i> Sinhala Sub
                                     </span>
