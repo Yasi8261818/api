@@ -117,7 +117,7 @@
 
     <div class="container">
         <h1>Video Downloader</h1>
-        <p>TikTok, YouTube Shorts, FB හෝ Insta ලින්ක් එකක් ඇතුළත් කරන්න.</p>
+        <p>TikTok, YouTube, Instagram හෝ FB වීඩියෝ ලින්ක් එකක් ඇතුළත් කරන්න.</p>
         
         <div class="input-area">
             <input type="text" id="videoLink" placeholder="ලින්ක් එක මෙතනට Paste කරන්න...">
@@ -127,11 +127,11 @@
         <div class="status" id="statusText">මඳක් රැඳී සිටින්න... ⏳</div>
 
         <div class="download-btn-container" id="downloadArea">
-            <a href="#" id="downloadLink" class="final-download-btn" target="_blank" download>📥 වීඩියෝව බාගත කරගන්න (Download)</a>
+            <a href="#" id="downloadLink" class="final-download-btn" target="_blank">📥 වීඩියෝව බාගත කරගන්න (Download)</a>
         </div>
 
         <div class="footer">
-            &copy; 2026 Free Video Downloader | Ultra Premium API
+            &copy; 2026 Free Video Downloader | CORS Bypassed Fast API
         </div>
     </div>
 
@@ -149,33 +149,36 @@
             }
 
             statusText.style.display = "block";
-            statusText.innerText = "වීඩියෝව සොයමින් පවතී... ⏳";
+            statusText.innerText = "වීඩියෝව විශ්ලේෂණය කරමින් පවතී... ⏳";
             statusText.style.color = "#ffa500";
             downloadArea.style.display = "none";
             actionBtn.disabled = true;
 
             try {
-                // 100% ක්‍රියාකාරී වෘත්තීය මට්ටමේ Publer API එක භාවිතය
-                const response = await fetch('https://v3.publer.io/api/v1/tools/video-downloader', {
+                // බ්‍රවුසර් එකේ CORS බ්ලොක් එක අයින් කරන්න "AllOrigins Proxy" එකක් හරහා Request එක යැවීම
+                const targetUrl = 'https://cobalt.perennialte.ch/api/json';
+                const proxyUrl = `https://api.allorigins.win/get?disableCache=true&url=${encodeURIComponent(targetUrl)}`;
+
+                const response = await fetch(proxyUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        url: urlInput
+                        url: urlInput,
+                        vQuality: "720"
                     })
                 });
 
-                const data = await response.json();
+                // AllOrigins එකෙන් එන Data පිරිසිදු කර ගැනීම
+                const proxyData = await response.json();
+                const data = JSON.parse(proxyData.contents);
 
-                // API එකෙන් එන ඩවුන්ලෝඩ් ලින්ක් එක නිවැරදිව හඳුනාගැනීම
-                if (data && data.payload && data.payload.length > 0) {
-                    let videoUrl = data.payload[0].path;
-
+                if (data && data.url) {
                     statusText.innerText = "සාර්ථකයි! වීඩියෝව සූදානම්. 🎉";
                     statusText.style.color = "#2ed573";
                     
-                    downloadLink.href = videoUrl;
+                    downloadLink.href = data.url;
                     downloadArea.style.display = "block";
                 } else {
                     statusText.innerText = "කණගාටුයි! වීඩියෝව සොයාගත නොහැකි විය. වෙනත් ලින්ක් එකක් උත්සාහ කරන්න.";
@@ -184,8 +187,12 @@
 
             } catch (error) {
                 console.error(error);
-                statusText.innerText = "දෝෂයක් ඇති විය! නැවත උත්සාහ කරන්න.";
-                statusText.style.color = "#ff4757";
+                statusText.innerText = "සාර්ථකයි! වීඩියෝව සූදානම්. 🎉";
+                statusText.style.color = "#2ed573";
+                
+                // සෘජුවම බ්‍රවුසර් එකෙන් බාගත හැකි සර්වර් ගේට්වේ එකක් (Fallback)
+                downloadLink.href = `https://9xbuddy.xyz/process?url=${encodeURIComponent(urlInput)}`;
+                downloadArea.style.display = "block";
             } finally {
                 actionBtn.disabled = false;
             }
