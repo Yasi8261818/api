@@ -14,7 +14,7 @@
             <h1 class="text-2xl font-bold text-cyan-400 flex items-center gap-2">
                 <i class="fas fa-film"></i> Movie Hub
             </h1>
-            <p class="text-xs text-gray-400">Sinhalasub API Edition</p>
+            <p class="text-xs text-gray-400">Sinhalasub API Pro Edition</p>
         </div>
     </header>
 
@@ -53,11 +53,8 @@
     </main>
 
     <script>
-        // ⚠️ ඔබේ රහසිගත API Key එක මෙතනට ඇතුලත් කරන්න
+        // ඔයාගේ Dashboard එකෙන් ගත්ත ඇත්තම API Key එක
         const API_KEY = '90346ff775ff3ee92fe8a1118fc57b4d'; 
-        
-        // Vercel එකේදී CORS policy මඟින් API එක Block වීම වැළැක්වීමට Proxy එකක් භාවිත කර ඇත
-        const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
         const BASE_URL = 'https://apis.sadas.dev/api/v1/movie/sinhalasub';
 
         // 1. සිනමාපට සෙවීමේ පියවර (/search?q=)
@@ -75,14 +72,13 @@
             statusText.innerText = "ඩේටාබේස් එකෙන් සොයමින් පවතී...";
             statusMessage.classList.remove('hidden');
 
-            // API URL එක Proxy එක හරහා Request කිරීම
-            const searchApiUrl = `${PROXY_URL}${BASE_URL}/search?q=${encodeURIComponent(query)}`;
-
-            fetch(searchApiUrl, {
+            // කෙලින්ම සර්වර් එකට Request එක යවනවා (No Proxy)
+            fetch(`${BASE_URL}/search?q=${encodeURIComponent(query)}`, {
                 method: 'GET',
+                mode: 'cors', // CORS බ්ලොක් වීම වැළැක්වීමට
                 headers: { 
                     'x-api-key': API_KEY, 
-                    'Accept': 'application/json' 
+                    'Accept': 'application/json'
                 }
             })
             .then(response => {
@@ -141,14 +137,12 @@
                     Direct links ලබා ගනිමින් පවතී...
                 </div>`;
 
-            // infodl URL එක Proxy එක හරහා Request කිරීම
-            const infoDlUrl = `${PROXY_URL}${BASE_URL}/infodl?q=${encodeURIComponent(movieUrl)}`;
-
-            fetch(infoDlUrl, {
+            fetch(`${BASE_URL}/infodl?q=${encodeURIComponent(movieUrl)}`, {
                 method: 'GET',
+                mode: 'cors',
                 headers: { 
                     'x-api-key': API_KEY, 
-                    'Accept': 'application/json' 
+                    'Accept': 'application/json'
                 }
             })
             .then(response => {
@@ -158,7 +152,6 @@
             .then(data => {
                 let linksHtml = `<div class="flex flex-col gap-2">`;
                 
-                // API Response එක ඇතුලේ ඇති links array එක පරික්ෂා කිරීම
                 const dlLinks = Array.isArray(data) ? data : (data.links || []);
 
                 if(dlLinks.length > 0) {
@@ -204,7 +197,7 @@
             document.getElementById('movieResults').innerHTML = `
                 <div class="text-center py-12 bg-gray-900 rounded-2xl border border-red-900/50">
                     <i class="fas fa-circle-xmark text-red-500 text-4xl mb-3"></i>
-                    <p class="text-red-400">දෝෂයක් සිදු විය! කරුණාකර API Key එක හෝ Proxy සබඳතාව පරීක්ෂා කරන්න.</p>
+                    <p class="text-red-400">දෝෂයක් සිදු විය! ඔයාගේ API Key එක වලංගු එකක්ද කියා පරීක්ෂා කරන්න.</p>
                 </div>`;
         }
     </script>
