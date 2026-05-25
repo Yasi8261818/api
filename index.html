@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Hub - Advanced API Integration</title>
+    <title>Movie Hub - Sinhalasub API</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -14,21 +14,21 @@
             <h1 class="text-2xl font-bold text-cyan-400 flex items-center gap-2">
                 <i class="fas fa-film"></i> Movie Hub
             </h1>
-            <p class="text-xs text-gray-400">Sinhalasub API Pro</p>
+            <p class="text-xs text-gray-400">Sinhalasub API Edition</p>
         </div>
     </header>
 
     <main class="container mx-auto px-4 py-8 max-w-4xl">
         
         <section class="bg-gray-900 p-6 rounded-2xl border border-gray-800 shadow-xl mb-8">
-            <h2 class="text-xl font-semibold mb-4 text-gray-200">සිනමා පටයේ නම ඇතුලත් කරන්න</h2>
+            <h2 class="text-xl font-semibold mb-4 text-gray-200">සිනමා පට හෝ උපසිරසි සොයන්න</h2>
             <form id="searchForm" class="flex flex-col sm:flex-row gap-3">
                 <div class="relative flex-1">
                     <i class="fas fa-search absolute left-4 top-4 text-gray-500"></i>
                     <input 
                         type="text" 
                         id="searchQuery" 
-                        placeholder="उदा: KGF Chapter 1, Avatar, Red Sonja..." 
+                        placeholder="उदा: Red Sonja, Avatar, KGF, 2024..." 
                         class="w-full bg-gray-950 border border-gray-700 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-cyan-500 transition-colors"
                         required
                     >
@@ -44,7 +44,7 @@
 
         <div id="statusMessage" class="text-center py-6 hidden">
             <div class="animate-spin inline-block w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full mb-2"></div>
-            <p id="statusText" class="text-gray-400">Searching Database...</p>
+            <p id="statusText" class="text-gray-400">Searching movies, please wait...</p>
         </div>
 
         <section id="movieResults" class="grid grid-cols-1 gap-6">
@@ -53,11 +53,14 @@
     </main>
 
     <script>
-        // ⚠️ කන්ෆිගරේෂන් (ඔයාගේ අලුත් API Key එක මෙතනට දාන්න)
-        const API_KEY = 'da32b993ffba4deaa26afe1f54036834'; 
+        // ⚠️ ඔබේ රහසිගත API Key එක මෙතනට ඇතුලත් කරන්න
+        const API_KEY = '90346ff775ff3ee92fe8a1118fc57b4d'; 
+        
+        // Vercel එකේදී CORS policy මඟින් API එක Block වීම වැළැක්වීමට Proxy එකක් භාවිත කර ඇත
+        const PROXY_URL = 'https://cors-anywhere.herokuapp.com/';
         const BASE_URL = 'https://apis.sadas.dev/api/v1/movie/sinhalasub';
 
-        // පියවර 1: පරිශීලකයා Search කරන විට ක්‍රියාත්මක වන කොටස
+        // 1. සිනමාපට සෙවීමේ පියවර (/search?q=)
         document.getElementById('searchForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -68,13 +71,14 @@
             const statusMessage = document.getElementById('statusMessage');
             const statusText = document.getElementById('statusText');
 
-            // UI එක සුද්ධ කිරීම
             resultsContainer.innerHTML = '';
-            statusText.innerText = "Database එකෙන් සොයමින් පවතී...";
+            statusText.innerText = "ඩේටාබේස් එකෙන් සොයමින් පවතී...";
             statusMessage.classList.remove('hidden');
 
-            // API එකට පළමු කෝල් එක (Search Call)
-            fetch(`${BASE_URL}/search?q=${encodeURIComponent(query)}`, {
+            // API URL එක Proxy එක හරහා Request කිරීම
+            const searchApiUrl = `${PROXY_URL}${BASE_URL}/search?q=${encodeURIComponent(query)}`;
+
+            fetch(searchApiUrl, {
                 method: 'GET',
                 headers: { 
                     'x-api-key': API_KEY, 
@@ -82,13 +86,12 @@
                 }
             })
             .then(response => {
-                if (!response.ok) throw new Error('Search request failed');
+                if (!response.ok) throw new Error('Search failed');
                 return response.json();
             })
             .then(data => {
                 statusMessage.classList.add('hidden');
                 
-                // දත්ත තිබේ නම් ඒවා Card එක බැගින් පෙන්වීම
                 if (data && data.length > 0) {
                     data.forEach((movie, index) => {
                         const movieTitle = movie.title || 'Untitled Movie';
@@ -102,13 +105,12 @@
                                 <img src="${movieImg}" alt="${movieTitle}" class="w-20 h-28 object-cover rounded-lg bg-gray-850 flex-shrink-0">
                                 <div class="flex flex-col justify-center flex-1">
                                     <h3 class="font-bold text-base md:text-lg text-gray-100 line-clamp-2">${movieTitle}</h3>
-                                    <p class="text-xs text-green-400 mt-1"><i class="fas fa-check-circle"></i> Sinhala Subtitles Detected</p>
+                                    <p class="text-xs text-cyan-400 mt-1"><i class="fas fa-check-circle"></i> Sinhala Subtitles Included</p>
                                 </div>
                             </div>
-                            
                             <div id="dl-section-${index}" class="mt-2 border-t border-gray-800 pt-4">
-                                <button onclick="fetchDownloadOptions('${movieUrl}', ${index})" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-950 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
-                                    <i class="fas fa-cloud-download-alt"></i> Download Options බලන්න
+                                <button onclick="loadDownloadLinks('${movieUrl}', ${index})" class="w-full bg-cyan-500 hover:bg-cyan-600 text-gray-950 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                                    <i class="fas fa-link"></i> Download Options බලන්න
                                 </button>
                             </div>
                         `;
@@ -125,19 +127,24 @@
             });
         });
 
-        // පියවර 2: "Download Options බලන්න" එබූ විට ඩේටාබේස් එකෙන් Links ඇදලා ගුණාත්මකභාවය (Quality) අනුව පෙන්වීම
-        function fetchDownloadOptions(movieUrl, index) {
+        // 2. තෝරාගත් සිනමාපටයේ ඩවුන්ලෝඩ් ලින්ක්ස් ලබාගැනීමේ පියවර (/infodl?q=)
+        function loadDownloadLinks(movieUrl, index) {
             const dlSection = document.getElementById(`dl-section-${index}`);
-            
-            // Loading සලකුණ පෙන්වීම
+            if(!movieUrl) {
+                alert("Movie URL not found!");
+                return;
+            }
+
             dlSection.innerHTML = `
                 <div class="text-center py-2 text-sm text-gray-400">
                     <div class="animate-spin inline-block w-4 h-4 border-2 border-cyan-500 border-t-transparent rounded-full mr-2 align-middle"></div>
                     Direct links ලබා ගනිමින් පවතී...
                 </div>`;
 
-            // API එකට දෙවැනි කෝල් එක (infodl Call)
-            fetch(`${BASE_URL}/infodl?q=${encodeURIComponent(movieUrl)}`, {
+            // infodl URL එක Proxy එක හරහා Request කිරීම
+            const infoDlUrl = `${PROXY_URL}${BASE_URL}/infodl?q=${encodeURIComponent(movieUrl)}`;
+
+            fetch(infoDlUrl, {
                 method: 'GET',
                 headers: { 
                     'x-api-key': API_KEY, 
@@ -145,61 +152,59 @@
                 }
             })
             .then(response => {
-                if (!response.ok) throw new Error('Failed to fetch movie info');
+                if (!response.ok) throw new Error('Failed to get download links');
                 return response.json();
             })
             .then(data => {
-                let htmlContent = `<div class="flex flex-col gap-2">`;
+                let linksHtml = `<div class="flex flex-col gap-2">`;
                 
-                // API එකෙන් එන links array එකක්ද කියා පරීක්ෂා කිරීම
-                const linksList = Array.isArray(data) ? data : (data.links || []);
+                // API Response එක ඇතුලේ ඇති links array එක පරික්ෂා කිරීම
+                const dlLinks = Array.isArray(data) ? data : (data.links || []);
 
-                if(linksList.length > 0) {
-                    // voice message එකේ කිව්වා වගේ Quality (720p, 1080p) සහ සයිස් වෙන් වෙන්ව පෙන්වීම
-                    linksList.forEach(item => {
-                        const qualityLabel = item.quality || item.title || 'Download';
-                        const fileSize = item.size ? `[${item.size}]` : '';
-                        const finalDownloadUrl = item.link || item.url || '#';
+                if(dlLinks.length > 0) {
+                    dlLinks.forEach(dl => {
+                        const quality = dl.quality || dl.title || 'Download';
+                        const size = dl.size ? `(${dl.size})` : '';
+                        const actualLink = dl.link || dl.url || '#';
 
-                        htmlContent += `
-                            <a href="${finalDownloadUrl}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-bold py-2.5 px-4 rounded-xl flex justify-between items-center text-sm transition-colors shadow-md">
-                                <span><i class="fas fa-arrow-alt-circle-down mr-1"></i> ${qualityLabel} ${fileSize} - ඩවුන්ලෝඩ් කරන්න</span>
+                        linksHtml += `
+                            <a href="${actualLink}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-bold py-2.5 px-4 rounded-xl flex justify-between items-center text-sm transition-colors shadow-md">
+                                <span><i class="fas fa-download mr-1"></i> ${quality} ${size} - බාගත කරන්න</span>
                                 <i class="fas fa-external-link-alt text-xs"></i>
                             </a>`;
                     });
-                } else if(data.link || data.download_link) {
-                    // තනි ලින්ක් එකක් පමණක් ආවොත් ක්‍රියාත්මක වන කොටස
-                    const singleLink = data.link || data.download_link;
-                    htmlContent += `
+                } else if(data.download_link || data.link) { 
+                    const singleLink = data.download_link || data.link;
+                    linksHtml += `
                         <a href="${singleLink}" target="_blank" class="bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-bold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors shadow-md">
                             <i class="fas fa-download"></i> Direct Download Movie
                         </a>`;
                 } else {
-                    htmlContent += `<p class="text-xs text-amber-400 text-center py-2"><i class="fas fa-exclamation-triangle"></i> Direct download links හමු නොවීය.</p>`;
+                    linksHtml += `<p class="text-xs text-amber-400 text-center py-2">Direct download links හමු නොවීය.</p>`;
                 }
 
-                htmlContent += `</div>`;
-                dlSection.innerHTML = htmlContent;
+                linksHtml += `</div>`;
+                dlSection.innerHTML = linksHtml;
             })
             .catch(error => {
                 console.error(error);
-                dlSection.innerHTML = `<p class="text-xs text-red-400 text-center py-2">ලින්ක් ලබා ගැනීමේදී දෝෂයක් සිදු විය. නැවත උත්සාහ කරන්න.</p>`;
+                dlSection.innerHTML = `<p class="text-xs text-red-400 text-center py-2">Error loading links. Try again.</p>`;
             });
         }
 
         function showNoResults() {
             document.getElementById('movieResults').innerHTML = `
                 <div class="text-center py-12 bg-gray-900 rounded-2xl border border-gray-800">
-                    <i class="fas fa-database text-gray-600 text-4xl mb-3"></i>
-                    <p class="text-gray-400">එම නමින් කිසිදු සිනමා පටයක් ඩේටාබේස් එකේ හමු වූයේ නැත.</p>
+                    <i class="fas fa-exclamation-circle text-gray-600 text-4xl mb-3"></i>
+                    <p class="text-gray-400">කිසිදු චිත්‍රපටයක් හමු වූයේ නැත. වෙනත් නමකින් උත්සාහ කරන්න.</p>
                 </div>`;
         }
 
         function showError() {
             document.getElementById('movieResults').innerHTML = `
                 <div class="text-center py-12 bg-gray-900 rounded-2xl border border-red-900/50">
-                    <i class="fas fa-exclamation-triangle text-red-500 text-4xl mb-3"></i>
-                    <p class="text-red-400">ජාල දෝෂයක් හෝ API Key එකෙහි ගැටළුවක් පවතී!</p>
+                    <i class="fas fa-circle-xmark text-red-500 text-4xl mb-3"></i>
+                    <p class="text-red-400">දෝෂයක් සිදු විය! කරුණාකර API Key එක හෝ Proxy සබඳතාව පරීක්ෂා කරන්න.</p>
                 </div>`;
         }
     </script>
